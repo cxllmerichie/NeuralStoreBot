@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from apscheduler.triggers.interval import IntervalTrigger
 from typing import Optional
 import aiohttp
 import os
 
+import loggers
 import search
+import const
 
 
 class Product:
@@ -37,39 +40,52 @@ class Product:
         return info
 
 
-class Data:  # FIXME: data actualization
-    _url: str = 'https://api.dntrade.com.ua'
-    _key: str = os.getenv('DNTRADE_KEY')
-
-    products: list[Product] = []
+class Products(list):
+    __url: str = 'https://api.dntrade.com.ua'
+    __key: str = os.getenv('DNTRADE_KEY')
 
     @property
     def titles(self) -> str:
         """
         :return: titles of all products, one per line.
         """
-        return '\n'.join(product.title for product in self.products)
+        return '\n'.join(product.title for product in self)
+
+    async def init(self) -> None:
+        """
+        Refresh the product list and schedule the data refresh each hour.
+        :return: None.
+        """
+        await self.collect()
+        const.SCHEDULER.add_job(
+            id=f'products.refresh',
+            func=self.collect,
+            max_instances=1,
+            trigger=IntervalTrigger(hours=1),
+        )
 
     async def collect(self) -> None:
         """
         Collect data about all products from all shops.
         :return: None.
         """
-        async with aiohttp.ClientSession(base_url=self._url) as s_shops:
+        self.clear()
+        async with aiohttp.ClientSession(base_url=self.__url) as s_shops:
             async with s_shops.get(
                     url='/products/stores',
-                    headers={'ApiKey': self._key}
+                    headers={'ApiKey': self.__key}
             ) as r_shops:
                 for store in list(filter(lambda s: s['is_sell'], (await r_shops.json())['stores'])):
-                    async with aiohttp.ClientSession(base_url=self._url) as s_products:
+                    async with aiohttp.ClientSession(base_url=self.__url) as s_products:
                         async with s_products.post(
                                 url='/products/list',
-                                headers={'ApiKey': self._key},
+                                headers={'ApiKey': self.__key},
                                 params={'store_id': store['id']}
                         ) as r_products:
                             for product in (await r_products.json())['products']:
                                 if product := Product.init(product):
-                                    self.products.append(product)
+                                    self.append(product)
+        loggers.dntrade.success('Product list refreshed.')
 
     async def like(self, what: str) -> list[Product]:
         """
@@ -77,4 +93,4 @@ class Data:  # FIXME: data actualization
         :param what: element defining criteria.
         :return: list of products.
         """
-        return [product for product in self.products if await search.is_match(what, product.title)]
+        return [product for product in self if await search.is_match(what, product.title)]

@@ -1,11 +1,13 @@
 import handlers
+import loggers
 import const
 
 
 async def main():
-    print('Loading...')  # TODO: logging
-    await const.DATA.collect()
-    print('Polling...')  # TODO: logging
+    loggers.log.info('Loading...')
+    await const.PRODUCTS.init()
+    const.SCHEDULER.start()
+    loggers.log.info('Polling...')
     await handlers.DISPATCHER.start_polling()
 
 

@@ -16,6 +16,9 @@ orjson = "*"
 fuzzywuzzy = "*"
 python-levenshtein = "*"
 transliterate = "*"
+apscheduler = "*"
+apidevtools = {extras = ["logman"], version = "*"}
+loguru = "*"
 #cchardet = "*"
 #uvloop = "*"
 

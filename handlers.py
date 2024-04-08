@@ -3,8 +3,10 @@ from typing import Union
 from typing import Any
 import orjson as json
 import openai
+import os
 
 from const import DISPATCHER
+import loggers
 import const
 
 
@@ -85,7 +87,7 @@ async def reply(message: types.Message, response) -> None:
             extracted.get('details', ''),
         ]).strip()
         CACHE[identifier] = {
-            'products': await const.DATA.like(target),
+            'products': await const.PRODUCTS.like(target),
             'index': -1,
             'message_id': None,
         }
@@ -94,10 +96,12 @@ async def reply(message: types.Message, response) -> None:
             await message.answer(text=text, parse_mode='HTML')
         else:
             text = await next(message)
+        loggers.dntrade.info(f'Target: "{target}", found: {", ".join(p.title for p in CACHE[identifier]["products"])}')
     else:
         text = response['choices'][0]['message']['content']
         await message.answer(text, parse_mode='HTML')
     const.OPENAI_HISTORY[identifier].append({'role': 'assistant', 'content': text})
+    loggers.openai[identifier].success(text)
 
 
 @DISPATCHER.message_handler(content_types=['text'])
@@ -119,11 +123,12 @@ async def _(message: types.Message):
                 Ты должен вести себя только как консультант и/или продавец, предлагать альтернативы, описывать товар
                 и его характеристики и вести пользователя к тому что бы он просил тебя найти конкретный товар
                 запрашивая его тип, бренд, модель, характеристики и прочие возможные детали для дальнейшего поиска
-                в базе данных. Это список всех твоих товаров, не придумывай никакие другие: {const.DATA.titles}.
+                в базе данных. Это список всех твоих товаров, не придумывай никакие другие: {const.PRODUCTS.titles}.
                 '''
             }
         ]
     const.OPENAI_HISTORY[identifier].append({'role': 'user', 'content': message.text})
+    loggers.openai[identifier].info(message.text)
 
     response = await openai.ChatCompletion.acreate(
         model='gpt-3.5-turbo-0125',
