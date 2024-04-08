@@ -1,0 +1,31 @@
+[
+  {
+    "name": "extract_product_name",
+    "description": "Get the name, type, brand, model or any other details about the product from the body of the input text, only if the user asks to find such a product. It might be entered in Russian, English or Ukrainian language, but keep the extracted words in original one, do not translate to any other.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Product name, for example \"Samsung A30\", \"iPhone 8\" or any other"
+        },
+        "type": {
+          "type": "string",
+          "description": "Product type, for example \"phone\", \"dishwasher\", \"ring\" or any other"
+        },
+        "brand": {
+          "type": "string",
+          "description": "Product brand, for example \"Samsung\", \"iPhone\" or any other"
+        },
+        "model": {
+          "type": "string",
+          "description": "Product brand, for example \"SE\", \"8\", \"A30\" or any other"
+        },
+        "details": {
+          "type": "string",
+          "description": "Product details, for example \"64Gb RAM\", \"5V\", \"black\" or any other"
+        }
+      }
+    }
+  }
+]
