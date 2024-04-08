@@ -4,8 +4,8 @@ from typing import Any
 import orjson as json
 import openai
 
-from .const import DISPATCHER
-from . import const
+from const import DISPATCHER
+import const
 
 
 CACHE: dict[str, Any] = dict()

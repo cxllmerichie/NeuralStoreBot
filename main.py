@@ -1,4 +1,5 @@
-from src import const, handlers
+import handlers
+import const
 
 
 async def main():

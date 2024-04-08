@@ -10,7 +10,7 @@ import asyncio
 import openai
 import os
 
-from . import dntrade
+import dntrade
 
 
 openai.api_key = os.getenv('OPENAI_KEY')
